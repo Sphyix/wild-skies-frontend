@@ -194,12 +194,12 @@ export default function GameplaySection(): React.JSX.Element {
         initial={{ opacity: 0, y: 30 }}
         animate={isInView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.6 }}
-        className="text-center mb-6"
+        className="text-center mb-12"
       >
-        <h2 className="text-3xl md:text-4xl font-bold mb-2">
+        <h2 className="text-4xl md:text-6xl font-bold mb-4">
           <span className="text-ws-accent">Gameplay</span>
         </h2>
-        <p className="text-ws-muted max-w-2xl mx-auto text-sm">
+        <p className="text-ws-muted max-w-2xl mx-auto text-lg">
           Explore the core features that make Wild Skies an unforgettable adventure.
         </p>
       </motion.div>
@@ -351,12 +351,12 @@ export default function GameplaySection(): React.JSX.Element {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
-                className="bg-ws-card/50 rounded-lg p-4 md:p-5 border border-ws-accent/20"
+                className="bg-ws-card/50 rounded-lg px-5 py-3 border border-ws-accent/20"
               >
-                <h3 className="text-xl md:text-2xl font-bold text-ws-accent mb-2">
+                <h3 className="text-lg md:text-xl font-bold text-ws-accent mb-1">
                   {gameplayItems[activeIndex].title}
                 </h3>
-                <p className="text-ws-text/90 mb-4 leading-relaxed text-sm">
+                <p className="text-ws-text/90 mb-2 leading-snug text-sm">
                   {gameplayItems[activeIndex].description}
                 </p>
                 <ImageGallery
@@ -386,12 +386,12 @@ export default function GameplaySection(): React.JSX.Element {
               {/* Button */}
               <div className="relative bg-gradient-to-r from-ws-card via-ws-dark to-ws-card rounded-lg border border-ws-accent/40 p-4 text-center group-hover:border-ws-accent group-hover:shadow-glow transition-all">
                 <p className="text-base md:text-lg font-medium text-ws-text">
-                  Learn to master unique{" "}
-                  <span className="text-ws-accent font-bold">Aerial Traversal</span>?
+                  Ready to master unique{" "}
+                  <span className="text-ws-accent font-bold">Aerial Traversal</span> skills?
                 </p>
-                <div className="mt-1 flex items-center justify-center gap-2 text-ws-muted group-hover:text-ws-accent transition-colors">
-                  <span className="text-xs">Discover more</span>
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="mt-2 flex items-center justify-center gap-2 text-ws-muted group-hover:text-ws-accent transition-colors">
+                  <span className="text-sm">Discover more</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                   </svg>
                 </div>

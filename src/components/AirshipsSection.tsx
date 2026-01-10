@@ -50,7 +50,7 @@ export default function AirshipsSection(): React.JSX.Element {
   return (
     <section
       id="airships"
-      className="min-h-screen py-20 px-4 relative overflow-hidden"
+      className="min-h-screen py-12 px-4 relative overflow-hidden"
       ref={sectionRef}
     >
       {/* Background effect */}

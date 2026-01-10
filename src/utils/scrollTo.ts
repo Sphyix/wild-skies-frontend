@@ -6,7 +6,7 @@
  */
 export function smoothScrollTo(
   elementId: string,
-  offset: number = -16,
+  offset: number = 24,
   duration: number = 500
 ): void {
   const element = document.getElementById(elementId);
