@@ -5,12 +5,33 @@ import { motion, AnimatePresence, useInView } from "framer-motion";
 import Image from "next/image";
 import { smoothScrollTo } from "@/utils/scrollTo";
 
-function getCircleStyles(index: number, activeIndex: number): string {
-  if (index === activeIndex) {
-    return "border-ws-accent bg-ws-accent/20 glow-dot-active";
+// Get visible indices for the carousel with wrap-around
+function getVisibleIndices(activeIndex: number, totalItems: number): number[] {
+  const indices: number[] = [];
+  for (let offset = -2; offset <= 2; offset++) {
+    const index = (activeIndex + offset + totalItems) % totalItems;
+    indices.push(index);
   }
-  if (index < activeIndex) {
-    return "border-ws-accent/60 bg-ws-accent/10 glow-dot";
+  return indices;
+}
+
+// Get size and style classes based on distance from center
+function getCircleConfig(position: number): { size: string; opacity: string; scale: number } {
+  // position: 0 = -2, 1 = -1, 2 = center, 3 = +1, 4 = +2
+  const distanceFromCenter = Math.abs(position - 2);
+
+  if (distanceFromCenter === 0) {
+    return { size: "w-20 h-20", opacity: "opacity-100", scale: 1 };
+  } else if (distanceFromCenter === 1) {
+    return { size: "w-16 h-16", opacity: "opacity-80", scale: 0.8 };
+  } else {
+    return { size: "w-12 h-12", opacity: "opacity-50", scale: 0.6 };
+  }
+}
+
+function getCircleStyles(isSelected: boolean): string {
+  if (isSelected) {
+    return "border-ws-accent bg-ws-accent/20 glow-dot-active";
   }
   return "border-ws-muted/30 bg-ws-card hover:border-ws-accent/50";
 }
@@ -167,108 +188,161 @@ export default function GameplaySection(): React.JSX.Element {
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
 
   return (
-    <section id="gameplay" className="py-20 px-4 relative" ref={sectionRef}>
+    <section id="gameplay" className="py-10 px-4 relative" ref={sectionRef}>
       {/* Section Header */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={isInView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.6 }}
-        className="text-center mb-16"
+        className="text-center mb-6"
       >
-        <h2 className="text-4xl md:text-5xl font-bold mb-4">
+        <h2 className="text-3xl md:text-4xl font-bold mb-2">
           <span className="text-ws-accent">Gameplay</span>
         </h2>
-        <p className="text-ws-muted max-w-2xl mx-auto">
+        <p className="text-ws-muted max-w-2xl mx-auto text-sm">
           Explore the core features that make Wild Skies an unforgettable adventure.
         </p>
       </motion.div>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col lg:flex-row lg:items-start gap-8 lg:gap-16">
-          {/* Vertical Progress Bar - fixed width to prevent overlap */}
+        <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-8">
+          {/* Mobile: Horizontal Carousel Progress Bar */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="lg:hidden flex flex-col items-center"
+          >
+            <div className="flex items-center gap-2">
+              {/* Left Arrow */}
+              <button
+                onClick={() => setActiveIndex((prev) => (prev - 1 + gameplayItems.length) % gameplayItems.length)}
+                className="w-8 h-8 rounded-full bg-ws-card border border-ws-accent/30 flex items-center justify-center hover:border-ws-accent hover:shadow-glow-sm transition-all"
+                aria-label="Previous item"
+              >
+                <svg className="w-4 h-4 text-ws-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              {/* Carousel circles */}
+              <div className="flex items-center gap-1">
+                {getVisibleIndices(activeIndex, gameplayItems.length).map((itemIndex, position) => {
+                  const config = getCircleConfig(position);
+                  const item = gameplayItems[itemIndex];
+                  const isSelected = position === 2;
+
+                  return (
+                    <motion.button
+                      key={`mobile-${itemIndex}-${position}`}
+                      onClick={() => setActiveIndex(itemIndex)}
+                      className={`relative rounded-full border-2 flex items-center justify-center transition-all duration-300 overflow-hidden ${config.opacity} ${getCircleStyles(isSelected)}`}
+                      animate={{ scale: config.scale }}
+                      transition={{ duration: 0.3 }}
+                      style={{ width: 56, height: 56 }}
+                    >
+                      {item.icon ? (
+                        <Image
+                          src={item.icon}
+                          alt={item.title}
+                          width={56}
+                          height={56}
+                          className="w-full h-full object-cover rounded-full"
+                        />
+                      ) : (
+                        <span className={`text-base font-bold ${isSelected ? "text-ws-accent" : "text-ws-muted"}`}>
+                          {itemIndex + 1}
+                        </span>
+                      )}
+                    </motion.button>
+                  );
+                })}
+              </div>
+
+              {/* Right Arrow */}
+              <button
+                onClick={() => setActiveIndex((prev) => (prev + 1) % gameplayItems.length)}
+                className="w-8 h-8 rounded-full bg-ws-card border border-ws-accent/30 flex items-center justify-center hover:border-ws-accent hover:shadow-glow-sm transition-all"
+                aria-label="Next item"
+              >
+                <svg className="w-4 h-4 text-ws-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Desktop: Vertical Carousel Progress Bar */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex lg:flex-col items-center gap-0 lg:gap-0 overflow-x-auto lg:overflow-visible pb-4 lg:pb-0 lg:w-64 flex-shrink-0"
+            className="hidden lg:flex flex-col items-center gap-2 flex-shrink-0"
           >
-            {gameplayItems.map((item, index) => (
-              <div key={item.id} className="flex lg:flex-col items-center">
-                {/* Circle with image or number */}
-                <button
-                  onClick={() => setActiveIndex(index)}
-                  className={`relative flex-shrink-0 w-20 h-20 lg:w-24 lg:h-24 rounded-full border-3 flex items-center justify-center transition-all duration-300 overflow-hidden ${getCircleStyles(index, activeIndex)}`}
-                >
-                  {item.icon ? (
-                    <Image
-                      src={item.icon}
-                      alt={item.title}
-                      width={96}
-                      height={96}
-                      className="w-full h-full object-cover rounded-full"
-                    />
-                  ) : (
-                    <span
-                      className={`text-2xl font-bold ${
-                        index <= activeIndex ? "text-ws-accent" : "text-ws-muted"
-                      }`}
-                    >
-                      {index + 1}
-                    </span>
-                  )}
-                </button>
+            {/* Up Arrow */}
+            <button
+              onClick={() => setActiveIndex((prev) => (prev - 1 + gameplayItems.length) % gameplayItems.length)}
+              className="w-8 h-8 rounded-full bg-ws-card border border-ws-accent/30 flex items-center justify-center hover:border-ws-accent hover:shadow-glow-sm transition-all"
+              aria-label="Previous item"
+            >
+              <svg className="w-4 h-4 text-ws-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+            </button>
 
-                {/* Label below circle on desktop */}
-                <span
-                  className={`hidden lg:block mt-2 text-sm font-medium transition-colors text-center max-w-24 ${
-                    index === activeIndex ? "text-ws-accent" : "text-ws-muted"
-                  }`}
-                >
-                  {item.title}
-                </span>
+            {/* Carousel circles */}
+            <div className="flex flex-col items-center gap-1">
+              {getVisibleIndices(activeIndex, gameplayItems.length).map((itemIndex, position) => {
+                const config = getCircleConfig(position);
+                const item = gameplayItems[itemIndex];
+                const isSelected = position === 2;
 
-                {/* Connecting Line */}
-                {index < gameplayItems.length - 1 && (
-                  <div className="relative w-6 lg:w-1 h-1 lg:h-8 lg:my-2">
-                    {/* Background line */}
-                    <div className="absolute inset-0 bg-ws-muted/20 rounded-full" />
-                    {/* Glowing progress line - horizontal for mobile */}
-                    <motion.div
-                      className="lg:hidden absolute inset-0 rounded-full glow-line"
-                      initial={{ scaleX: 0 }}
-                      animate={{
-                        scaleX: index < activeIndex ? 1 : 0,
-                      }}
-                      style={{
-                        transformOrigin: "left",
-                      }}
-                      transition={{ duration: 0.4 }}
-                    />
-                    {/* Vertical version for desktop */}
-                    <motion.div
-                      className="hidden lg:block absolute inset-0 rounded-full glow-line"
-                      initial={{ scaleY: 0 }}
-                      animate={{
-                        scaleY: index < activeIndex ? 1 : 0,
-                      }}
-                      style={{
-                        transformOrigin: "top",
-                      }}
-                      transition={{ duration: 0.4 }}
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
+                return (
+                  <motion.button
+                    key={`desktop-${itemIndex}-${position}`}
+                    onClick={() => setActiveIndex(itemIndex)}
+                    className={`relative rounded-full border-2 flex items-center justify-center transition-all duration-300 overflow-hidden ${config.opacity} ${getCircleStyles(isSelected)}`}
+                    animate={{ scale: config.scale }}
+                    transition={{ duration: 0.3 }}
+                    style={{ width: 100, height: 100 }}
+                  >
+                    {item.icon ? (
+                      <Image
+                        src={item.icon}
+                        alt={item.title}
+                        width={100}
+                        height={100}
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      <span className={`text-xl font-bold ${isSelected ? "text-ws-accent" : "text-ws-muted"}`}>
+                        {itemIndex + 1}
+                      </span>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+
+            {/* Down Arrow */}
+            <button
+              onClick={() => setActiveIndex((prev) => (prev + 1) % gameplayItems.length)}
+              className="w-8 h-8 rounded-full bg-ws-card border border-ws-accent/30 flex items-center justify-center hover:border-ws-accent hover:shadow-glow-sm transition-all"
+              aria-label="Next item"
+            >
+              <svg className="w-4 h-4 text-ws-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
           </motion.div>
 
-          {/* Content Panel - Sticky on desktop */}
+          {/* Content Panel */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="flex-1 min-w-0 lg:sticky lg:top-24 lg:self-start"
+            className="flex-1 min-w-0"
           >
             <AnimatePresence mode="wait">
               <motion.div
@@ -277,12 +351,12 @@ export default function GameplaySection(): React.JSX.Element {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
-                className="bg-ws-card/50 rounded-xl p-6 md:p-8 border border-ws-accent/20"
+                className="bg-ws-card/50 rounded-lg p-4 md:p-5 border border-ws-accent/20"
               >
-                <h3 className="text-2xl md:text-3xl font-bold text-ws-accent mb-4">
+                <h3 className="text-xl md:text-2xl font-bold text-ws-accent mb-2">
                   {gameplayItems[activeIndex].title}
                 </h3>
-                <p className="text-ws-text/90 mb-6 leading-relaxed">
+                <p className="text-ws-text/90 mb-4 leading-relaxed text-sm">
                   {gameplayItems[activeIndex].description}
                 </p>
                 <ImageGallery
@@ -293,39 +367,39 @@ export default function GameplaySection(): React.JSX.Element {
             </AnimatePresence>
           </motion.div>
         </div>
-      </div>
 
-      {/* Airships Teaser Button */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={isInView ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.6, delay: 0.6 }}
-        className="mt-20"
-      >
-        <button
-          onClick={() => smoothScrollTo("airships")}
-          className="block w-full max-w-4xl mx-auto cursor-pointer"
+        {/* Airships Teaser Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="mt-4"
         >
-          <div className="relative group">
-            {/* Background glow */}
-            <div className="absolute inset-0 bg-ws-accent/20 blur-xl rounded-2xl group-hover:bg-ws-accent/30 transition-all" />
+          <button
+            onClick={() => smoothScrollTo("airships")}
+            className="block w-full max-w-3xl mx-auto cursor-pointer"
+          >
+            <div className="relative group">
+              {/* Background glow */}
+              <div className="absolute inset-0 bg-ws-accent/20 blur-lg rounded-xl group-hover:bg-ws-accent/30 transition-all" />
 
-            {/* Button */}
-            <div className="relative bg-gradient-to-r from-ws-card via-ws-dark to-ws-card rounded-xl border border-ws-accent/40 p-6 md:p-8 text-center group-hover:border-ws-accent group-hover:shadow-glow transition-all">
-              <p className="text-lg md:text-2xl font-medium text-ws-text">
-                Learn to master unique{" "}
-                <span className="text-ws-accent font-bold">Aerial Traversal</span>?
-              </p>
-              <div className="mt-3 flex items-center justify-center gap-2 text-ws-muted group-hover:text-ws-accent transition-colors">
-                <span className="text-sm">Discover more</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                </svg>
+              {/* Button */}
+              <div className="relative bg-gradient-to-r from-ws-card via-ws-dark to-ws-card rounded-lg border border-ws-accent/40 p-4 text-center group-hover:border-ws-accent group-hover:shadow-glow transition-all">
+                <p className="text-base md:text-lg font-medium text-ws-text">
+                  Learn to master unique{" "}
+                  <span className="text-ws-accent font-bold">Aerial Traversal</span>?
+                </p>
+                <div className="mt-1 flex items-center justify-center gap-2 text-ws-muted group-hover:text-ws-accent transition-colors">
+                  <span className="text-xs">Discover more</span>
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  </svg>
+                </div>
               </div>
             </div>
-          </div>
-        </button>
-      </motion.div>
+          </button>
+        </motion.div>
+      </div>
     </section>
   );
 }
