@@ -313,8 +313,8 @@ export default function GameplaySection(): React.JSX.Element {
             {/* Button */}
             <div className="relative bg-gradient-to-r from-ws-card via-ws-dark to-ws-card rounded-xl border border-ws-accent/40 p-6 md:p-8 text-center group-hover:border-ws-accent group-hover:shadow-glow transition-all">
               <p className="text-lg md:text-2xl font-medium text-ws-text">
-                ...Oh yeah, and did we mention the{" "}
-                <span className="text-ws-accent font-bold">Airships</span>?
+                Learn to master unique{" "}
+                <span className="text-ws-accent font-bold">Aerial Traversal</span>?
               </p>
               <div className="mt-3 flex items-center justify-center gap-2 text-ws-muted group-hover:text-ws-accent transition-colors">
                 <span className="text-sm">Discover more</span>

@@ -6,14 +6,15 @@
  */
 export function smoothScrollTo(
   elementId: string,
-  offset: number = 80,
+  offset: number = -16,
   duration: number = 500
 ): void {
   const element = document.getElementById(elementId);
   if (!element) return;
 
   const start = window.scrollY;
-  const end = element.offsetTop - offset;
+  const rect = element.getBoundingClientRect();
+  const end = start + rect.top - offset;
   const startTime = performance.now();
 
   function animateScroll(currentTime: number): void {
