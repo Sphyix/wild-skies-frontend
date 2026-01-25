@@ -182,13 +182,42 @@ function ImageGallery({ images, title }: ImageGalleryProps): React.JSX.Element {
   );
 }
 
+// Animation variants for directional carousel
+const desktopCarouselVariants = {
+  enter: (direction: number) => ({ y: direction > 0 ? 40 : -40, opacity: 0 }),
+  center: { y: 0, opacity: 1 },
+  exit: (direction: number) => ({ y: direction > 0 ? -40 : 40, opacity: 0 }),
+};
+
+const mobileCarouselVariants = {
+  enter: (direction: number) => ({ x: direction > 0 ? 40 : -40, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (direction: number) => ({ x: direction > 0 ? -40 : 40, opacity: 0 }),
+};
+
 export default function GameplaySection(): React.JSX.Element {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [direction, setDirection] = useState(0); // 1 = next, -1 = prev
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
 
+  const goToNext = () => {
+    setDirection(1);
+    setActiveIndex((prev) => (prev + 1) % gameplayItems.length);
+  };
+
+  const goToPrev = () => {
+    setDirection(-1);
+    setActiveIndex((prev) => (prev - 1 + gameplayItems.length) % gameplayItems.length);
+  };
+
+  const goToIndex = (index: number) => {
+    setDirection(index > activeIndex ? 1 : -1);
+    setActiveIndex(index);
+  };
+
   return (
-    <section id="gameplay" className="py-10 px-4 relative" ref={sectionRef}>
+    <section id="gameplay" className="min-h-[90vh] py-10 px-4 relative flex flex-col justify-center" ref={sectionRef}>
       {/* Section Header */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
@@ -217,7 +246,7 @@ export default function GameplaySection(): React.JSX.Element {
             <div className="flex items-center gap-2">
               {/* Left Arrow */}
               <button
-                onClick={() => setActiveIndex((prev) => (prev - 1 + gameplayItems.length) % gameplayItems.length)}
+                onClick={goToPrev}
                 className="w-8 h-8 rounded-full bg-ws-card border border-ws-accent/30 flex items-center justify-center hover:border-ws-accent hover:shadow-glow-sm transition-all"
                 aria-label="Previous item"
               >
@@ -227,42 +256,48 @@ export default function GameplaySection(): React.JSX.Element {
               </button>
 
               {/* Carousel circles */}
-              <div className="flex items-center gap-1">
-                {getVisibleIndices(activeIndex, gameplayItems.length).map((itemIndex, position) => {
-                  const config = getCircleConfig(position);
-                  const item = gameplayItems[itemIndex];
-                  const isSelected = position === 2;
+              <div className="flex items-center gap-1 overflow-hidden">
+                <AnimatePresence mode="popLayout" custom={direction} initial={false}>
+                  {getVisibleIndices(activeIndex, gameplayItems.length).map((itemIndex, position) => {
+                    const config = getCircleConfig(position);
+                    const item = gameplayItems[itemIndex];
+                    const isSelected = position === 2;
 
-                  return (
-                    <motion.button
-                      key={`mobile-${itemIndex}-${position}`}
-                      onClick={() => setActiveIndex(itemIndex)}
-                      className={`relative rounded-full border-2 flex items-center justify-center transition-all duration-300 overflow-hidden ${config.opacity} ${getCircleStyles(isSelected)}`}
-                      animate={{ scale: config.scale }}
-                      transition={{ duration: 0.3 }}
-                      style={{ width: 56, height: 56 }}
-                    >
-                      {item.icon ? (
-                        <Image
-                          src={item.icon}
-                          alt={item.title}
-                          width={56}
-                          height={56}
-                          className="w-full h-full object-cover rounded-full"
-                        />
-                      ) : (
-                        <span className={`text-base font-bold ${isSelected ? "text-ws-accent" : "text-ws-muted"}`}>
-                          {itemIndex + 1}
-                        </span>
-                      )}
-                    </motion.button>
-                  );
-                })}
+                    return (
+                      <motion.button
+                        key={`mobile-${activeIndex}-${position}`}
+                        custom={direction}
+                        variants={mobileCarouselVariants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        onClick={() => goToIndex(itemIndex)}
+                        className={`relative rounded-full border-2 flex items-center justify-center transition-colors duration-300 overflow-hidden ${config.opacity} ${getCircleStyles(isSelected)}`}
+                        style={{ width: 56, height: 56, scale: config.scale }}
+                        transition={{ duration: 0.25 }}
+                      >
+                        {item.icon ? (
+                          <Image
+                            src={item.icon}
+                            alt={item.title}
+                            width={56}
+                            height={56}
+                            className="w-full h-full object-cover rounded-full"
+                          />
+                        ) : (
+                          <span className={`text-base font-bold ${isSelected ? "text-ws-accent" : "text-ws-muted"}`}>
+                            {itemIndex + 1}
+                          </span>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </AnimatePresence>
               </div>
 
               {/* Right Arrow */}
               <button
-                onClick={() => setActiveIndex((prev) => (prev + 1) % gameplayItems.length)}
+                onClick={goToNext}
                 className="w-8 h-8 rounded-full bg-ws-card border border-ws-accent/30 flex items-center justify-center hover:border-ws-accent hover:shadow-glow-sm transition-all"
                 aria-label="Next item"
               >
@@ -282,7 +317,7 @@ export default function GameplaySection(): React.JSX.Element {
           >
             {/* Up Arrow */}
             <button
-              onClick={() => setActiveIndex((prev) => (prev - 1 + gameplayItems.length) % gameplayItems.length)}
+              onClick={goToPrev}
               className="w-8 h-8 rounded-full bg-ws-card border border-ws-accent/30 flex items-center justify-center hover:border-ws-accent hover:shadow-glow-sm transition-all"
               aria-label="Previous item"
             >
@@ -292,42 +327,48 @@ export default function GameplaySection(): React.JSX.Element {
             </button>
 
             {/* Carousel circles */}
-            <div className="flex flex-col items-center gap-1">
-              {getVisibleIndices(activeIndex, gameplayItems.length).map((itemIndex, position) => {
-                const config = getCircleConfig(position);
-                const item = gameplayItems[itemIndex];
-                const isSelected = position === 2;
+            <div className="flex flex-col items-center gap-1 overflow-hidden">
+              <AnimatePresence mode="popLayout" custom={direction} initial={false}>
+                {getVisibleIndices(activeIndex, gameplayItems.length).map((itemIndex, position) => {
+                  const config = getCircleConfig(position);
+                  const item = gameplayItems[itemIndex];
+                  const isSelected = position === 2;
 
-                return (
-                  <motion.button
-                    key={`desktop-${itemIndex}-${position}`}
-                    onClick={() => setActiveIndex(itemIndex)}
-                    className={`relative rounded-full border-2 flex items-center justify-center transition-all duration-300 overflow-hidden ${config.opacity} ${getCircleStyles(isSelected)}`}
-                    animate={{ scale: config.scale }}
-                    transition={{ duration: 0.3 }}
-                    style={{ width: 100, height: 100 }}
-                  >
-                    {item.icon ? (
-                      <Image
-                        src={item.icon}
-                        alt={item.title}
-                        width={100}
-                        height={100}
-                        className="w-full h-full object-cover rounded-full"
-                      />
-                    ) : (
-                      <span className={`text-xl font-bold ${isSelected ? "text-ws-accent" : "text-ws-muted"}`}>
-                        {itemIndex + 1}
-                      </span>
-                    )}
-                  </motion.button>
-                );
-              })}
+                  return (
+                    <motion.button
+                      key={`desktop-${activeIndex}-${position}`}
+                      custom={direction}
+                      variants={desktopCarouselVariants}
+                      initial="enter"
+                      animate="center"
+                      exit="exit"
+                      onClick={() => goToIndex(itemIndex)}
+                      className={`relative rounded-full border-2 flex items-center justify-center transition-colors duration-300 overflow-hidden ${config.opacity} ${getCircleStyles(isSelected)}`}
+                      style={{ width: 100, height: 100, scale: config.scale }}
+                      transition={{ duration: 0.25 }}
+                    >
+                      {item.icon ? (
+                        <Image
+                          src={item.icon}
+                          alt={item.title}
+                          width={100}
+                          height={100}
+                          className="w-full h-full object-cover rounded-full"
+                        />
+                      ) : (
+                        <span className={`text-xl font-bold ${isSelected ? "text-ws-accent" : "text-ws-muted"}`}>
+                          {itemIndex + 1}
+                        </span>
+                      )}
+                    </motion.button>
+                  );
+                })}
+              </AnimatePresence>
             </div>
 
             {/* Down Arrow */}
             <button
-              onClick={() => setActiveIndex((prev) => (prev + 1) % gameplayItems.length)}
+              onClick={goToNext}
               className="w-8 h-8 rounded-full bg-ws-card border border-ws-accent/30 flex items-center justify-center hover:border-ws-accent hover:shadow-glow-sm transition-all"
               aria-label="Next item"
             >
@@ -373,7 +414,7 @@ export default function GameplaySection(): React.JSX.Element {
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-4"
+          className="mt-8"
         >
           <button
             onClick={() => smoothScrollTo("airships")}

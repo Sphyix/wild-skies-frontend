@@ -8,7 +8,7 @@ export default function HomeSection(): React.JSX.Element {
   return (
     <section
       id="home"
-      className="min-h-screen flex flex-col items-center justify-center px-4 pt-20 pb-16 relative overflow-hidden"
+      className="min-h-[90vh] flex flex-col items-center justify-center px-4 pt-20 pb-16 relative overflow-hidden"
     >
       {/* Background gradient effect */}
       <div className="absolute inset-0 bg-gradient-to-b from-ws-darker via-ws-dark to-ws-darker" />
@@ -23,7 +23,7 @@ export default function HomeSection(): React.JSX.Element {
         }}
       />
 
-      <div className="relative z-10 max-w-4xl mx-auto text-center">
+      <div className="relative z-10 max-w-4xl mx-auto text-center mb-6">
         {/* Wild Skies Logo */}
         <motion.div
           initial={{ opacity: 0, y: -30 }}

@@ -96,7 +96,7 @@ export default function TimelineSection(): React.JSX.Element {
   return (
     <section
       id="timeline"
-      className="py-20 px-4 relative overflow-hidden"
+      className="min-h-[90vh] py-20 px-4 relative overflow-hidden"
       ref={sectionRef}
     >
       {/* Background */}
